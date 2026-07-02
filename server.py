@@ -19,12 +19,18 @@ import io
 import os
 import sqlite3
 import uuid
+import traceback
+import logging
 from datetime import date, datetime
 from pathlib import Path
 
 from flask import (
     Flask, request, jsonify, render_template, send_file, Response, abort
 )
+
+# Set up logging to see errors
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # --- Configuration -----------------------------------------------------------
 DATA_DIR = Path("data")
@@ -119,51 +125,59 @@ def index():
 @app.get("/api/applications")
 def list_applications():
     """Return all applications, newest first."""
-    with get_connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM applications ORDER BY date_applied DESC, id DESC"
-        ).fetchall()
-    return jsonify([row_to_dict(r) for r in rows])
+    try:
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT * FROM applications ORDER BY date_applied DESC, id DESC"
+            ).fetchall()
+        return jsonify([row_to_dict(r) for r in rows])
+    except Exception as e:
+        logger.error(f"Error listing applications: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e), "type": type(e).__name__}), 500
 
 
 @app.post("/api/applications")
 def create_application():
     """Create an application from multipart form data (+ resume PDF)."""
-    form = request.form
-    company = (form.get("company") or "").strip()
-    if not company:
-        return jsonify({"error": "Company is required."}), 400
+    try:
+        form = request.form
+        company = (form.get("company") or "").strip()
+        if not company:
+            return jsonify({"error": "Company is required."}), 400
 
-    resume = request.files.get("resume")
-    if not resume or not resume.filename:
-        return jsonify({"error": "Please attach the resume you used."}), 400
+        resume = request.files.get("resume")
+        if not resume or not resume.filename:
+            return jsonify({"error": "Please attach the resume you used."}), 400
 
-    resume_filename, resume_path = save_resume_file(resume)
+        resume_filename, resume_path = save_resume_file(resume)
 
-    with get_connection() as conn:
-        conn.execute(
-            """
-            INSERT INTO applications
-                (company, role, date_applied, status, location, job_link,
-                 notes, resume_filename, resume_path, follow_up_date, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                company,
-                (form.get("role") or "").strip(),
-                form.get("date_applied") or date.today().isoformat(),
-                form.get("status") or "Applied",
-                (form.get("location") or "").strip(),
-                (form.get("job_link") or "").strip(),
-                (form.get("notes") or "").strip(),
-                resume_filename,
-                resume_path,
-                form.get("follow_up_date") or None,
-                datetime.now().isoformat(timespec="seconds"),
-            ),
-        )
-        conn.commit()
-    return jsonify({"ok": True}), 201
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO applications
+                    (company, role, date_applied, status, location, job_link,
+                     notes, resume_filename, resume_path, follow_up_date, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    company,
+                    (form.get("role") or "").strip(),
+                    form.get("date_applied") or date.today().isoformat(),
+                    form.get("status") or "Applied",
+                    (form.get("location") or "").strip(),
+                    (form.get("job_link") or "").strip(),
+                    (form.get("notes") or "").strip(),
+                    resume_filename,
+                    resume_path,
+                    form.get("follow_up_date") or None,
+                    datetime.now().isoformat(timespec="seconds"),
+                ),
+            )
+            conn.commit()
+        return jsonify({"ok": True}), 201
+    except Exception as e:
+        logger.error(f"Error creating application: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e), "type": type(e).__name__}), 500
 
 
 @app.patch("/api/applications/<int:app_id>")
@@ -219,27 +233,31 @@ def download_resume(app_id: int):
 @app.get("/api/export")
 def export_csv():
     """Export all applications as a CSV download."""
-    with get_connection() as conn:
-        rows = conn.execute(
-            "SELECT company, role, date_applied, status, location, job_link, "
-            "notes, resume_filename, follow_up_date FROM applications "
-            "ORDER BY date_applied DESC, id DESC"
-        ).fetchall()
+    try:
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT company, role, date_applied, status, location, job_link, "
+                "notes, resume_filename, follow_up_date FROM applications "
+                "ORDER BY date_applied DESC, id DESC"
+            ).fetchall()
 
-    buffer = io.StringIO()
-    writer = csv.writer(buffer)
-    writer.writerow([
-        "company", "role", "date_applied", "status", "location",
-        "job_link", "notes", "resume_filename", "follow_up_date",
-    ])
-    for r in rows:
-        writer.writerow([r[k] for k in r.keys()])
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow([
+            "company", "role", "date_applied", "status", "location",
+            "job_link", "notes", "resume_filename", "follow_up_date",
+        ])
+        for r in rows:
+            writer.writerow([r[k] for k in r.keys()])
 
-    return Response(
-        buffer.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=job_applications.csv"},
-    )
+        return Response(
+            buffer.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=job_applications.csv"},
+        )
+    except Exception as e:
+        logger.error(f"Error exporting CSV: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": str(e), "type": type(e).__name__}), 500
 
 
 if __name__ == "__main__":
