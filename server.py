@@ -33,9 +33,29 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # --- Configuration -----------------------------------------------------------
-DATA_DIR = Path("data")
+# Try to use /tmp for ephemeral filesystems (like Render), fall back to data/
+import tempfile
+DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
+if not os.environ.get("DATA_DIR"):
+    # On Render and similar platforms, use /tmp to ensure the directory exists
+    try:
+        if not DATA_DIR.exists():
+            # Try to create the data directory, if it fails, use /tmp
+            try:
+                DATA_DIR.mkdir(exist_ok=True)
+            except:
+                DATA_DIR = Path(tempfile.gettempdir()) / "career_compass_data"
+                logger.warning(f"Could not create {Path('data')}, using {DATA_DIR} instead")
+    except:
+        DATA_DIR = Path(tempfile.gettempdir()) / "career_compass_data"
+        logger.warning(f"Using temporary directory {DATA_DIR} as fallback")
+
 RESUME_DIR = DATA_DIR / "resumes"          # uploaded resume files live here
 DB_PATH = DATA_DIR / "tracker.db"          # SQLite database file
+
+logger.info(f"Data directory: {DATA_DIR}")
+logger.info(f"Database path: {DB_PATH}")
+logger.info(f"Resume directory: {RESUME_DIR}")
 
 # The lifecycle stages an application can move through.
 STATUSES = ["Applied", "Online Assessment", "Interview", "Offer", "Accepted", "Rejected"]
@@ -56,34 +76,48 @@ def get_connection() -> sqlite3.Connection:
 
 def init_storage() -> None:
     """Create the data folders and table if they don't exist yet."""
-    DATA_DIR.mkdir(exist_ok=True)
-    RESUME_DIR.mkdir(exist_ok=True)
+    try:
+        logger.info("Initializing storage...")
+        DATA_DIR.mkdir(exist_ok=True, parents=True)
+        logger.info(f"✓ Created data directory at {DATA_DIR}")
+        
+        RESUME_DIR.mkdir(exist_ok=True, parents=True)
+        logger.info(f"✓ Created resume directory at {RESUME_DIR}")
 
-    with get_connection() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS applications (
-                id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                company         TEXT NOT NULL,
-                role            TEXT,
-                date_applied    TEXT,
-                status          TEXT,
-                location        TEXT,
-                job_link        TEXT,
-                notes           TEXT,
-                resume_filename TEXT,
-                resume_path     TEXT,
-                follow_up_date  TEXT,
-                created_at      TEXT
+        with get_connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS applications (
+                    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company         TEXT NOT NULL,
+                    role            TEXT,
+                    date_applied    TEXT,
+                    status          TEXT,
+                    location        TEXT,
+                    job_link        TEXT,
+                    notes           TEXT,
+                    resume_filename TEXT,
+                    resume_path     TEXT,
+                    follow_up_date  TEXT,
+                    created_at      TEXT
+                )
+                """
             )
-            """
-        )
-        conn.commit()
-        # Upgrade older databases in place by adding any missing columns.
-        existing = {row[1] for row in conn.execute("PRAGMA table_info(applications)")}
-        if "follow_up_date" not in existing:
-            conn.execute("ALTER TABLE applications ADD COLUMN follow_up_date TEXT")
             conn.commit()
+            logger.info("✓ Database table created/verified")
+            
+            # Upgrade older databases in place by adding any missing columns.
+            existing = {row[1] for row in conn.execute("PRAGMA table_info(applications)")}
+            if "follow_up_date" not in existing:
+                conn.execute("ALTER TABLE applications ADD COLUMN follow_up_date TEXT")
+                conn.commit()
+                logger.info("✓ Added follow_up_date column to existing database")
+        
+        logger.info("✓ Storage initialization complete")
+    except Exception as e:
+        logger.error(f"✗ Storage initialization failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
 
 
 def save_resume_file(uploaded_file) -> tuple[str, str]:
