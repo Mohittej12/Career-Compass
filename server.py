@@ -63,10 +63,8 @@ STATUSES = ["Applied", "Online Assessment", "Interview", "Offer", "Accepted", "R
 # Once here, follow-up reminders no longer matter — the process is over.
 TERMINAL_STATUSES = {"Accepted", "Rejected"}
 
-app = Flask(__name__)
 
-
-# --- Database layer ----------------------------------------------------------
+# --- Database layer (defined BEFORE app creation) ---------------------------
 def get_connection() -> sqlite3.Connection:
     """Open a SQLite connection with row access by column name."""
     conn = sqlite3.connect(DB_PATH)
@@ -146,6 +144,14 @@ def row_to_dict(row: sqlite3.Row) -> dict:
     d.pop("resume_path", None)
     d["resume_url"] = f"/api/applications/{d['id']}/resume" if d.get("resume_filename") else None
     return d
+
+
+# --- Create Flask app and initialize storage --------------------------------
+app = Flask(__name__)
+
+# Initialize storage immediately when the app is created
+# (This needs to run whether started by Flask or Gunicorn)
+init_storage()
 
 
 # --- Page route --------------------------------------------------------------
@@ -295,6 +301,5 @@ def export_csv():
 
 
 if __name__ == "__main__":
-    init_storage()
     port = int(os.environ.get("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=False)
