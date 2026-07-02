@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Application Tracker</title>
+  <title>Career Compass</title>
 
   <!-- Premium font pairing: Space Grotesk (display) + Inter (body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=2" />
 </head>
 <body>
   <!-- Animated aurora background blobs -->
@@ -25,9 +25,14 @@
     <nav class="nav">
       <div class="brand">
         <span class="brand-dot"></span>
-        Tracker
+        Career Compass
       </div>
-      <button class="btn btn-ghost" id="export-btn">Export CSV</button>
+      <div class="nav-links">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#features">Features</a>
+        <button class="btn btn-ghost btn-nav" id="contact-btn">Contact Us</button>
+        <button class="btn btn-ghost" id="export-btn">Export CSV</button>
+      </div>
     </nav>
 
     <div class="hero-inner reveal">
@@ -37,8 +42,8 @@
         <span class="grad">Land the one.</span>
       </h1>
       <p class="hero-sub">
-        Log each application and store the exact resume you sent — so when a
-        recruiter calls, you pull up the right version in one click.
+        Turn every opportunity into a clear next step with a polished workspace
+        designed for focused job searching, follow-ups, and progress tracking.
       </p>
       <div class="hero-actions">
         <button class="btn btn-primary" id="add-btn-hero">
@@ -70,6 +75,27 @@
     </div>
   </header>
 
+  <section class="feature-section reveal" id="features">
+    <div class="section-heading">
+      <p class="eyebrow">Built for serious job seekers</p>
+      <h2>Everything you need to stay organized, professional, and ahead of deadlines.</h2>
+    </div>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <h3>Resume Vault</h3>
+        <p>Attach the exact PDF used for each company and pull it back instantly whenever you need it.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Smart Follow-Ups</h3>
+        <p>Track reminders and stay on top of important conversations before opportunities slip away.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Quick Reporting</h3>
+        <p>Export your full application history to CSV whenever you want a clear record of your progress.</p>
+      </article>
+    </div>
+  </section>
+
   <!-- ============ DASHBOARD ============ -->
   <main class="dashboard" id="dashboard">
     <!-- Follow-up alert banner (shown only when something is due) -->
@@ -98,6 +124,7 @@
 
   <footer class="footer">
     <p>Built with Flask · Your data never leaves this machine 🔒</p>
+    <a href="#" class="footer-link" id="footer-contact-link">Contact Us</a>
   </footer>
 
   <!-- ============ ADD MODAL ============ -->
@@ -163,8 +190,28 @@
     </div>
   </div>
 
+  <div class="modal-overlay hidden" id="contact-modal">
+    <div class="modal reveal-modal">
+      <div class="modal-head">
+        <h2>Contact the developer</h2>
+        <button class="icon-btn" id="contact-close" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="contact-card">
+        <p>For any development issues, feature requests, or improvements, please reach out to:</p>
+        <a class="contact-link" href="mailto:mohittejgowraa@gmail.com">Gowrabathuni Mohit Tej</a>
+        <a class="contact-link" href="mailto:mohittejgowraa@gmail.com">mohittejgowraa@gmail.com</a>
+        <p class="contact-note">Your feedback helps make this platform more professional and useful for every job seeker.</p>
+      </div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" href="mailto:mohittejgowraa@gmail.com">Email now</a>
+      </div>
+    </div>
+  </div>
+
   <!-- canvas-confetti for offer celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
 </body>
 </html>

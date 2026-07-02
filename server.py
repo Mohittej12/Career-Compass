@@ -1,5 +1,5 @@
 """
-server.py — Job Application Tracker (custom web app)
+server.py — Career Compass (custom web app)
 ---------------------------------------------------
 A Flask backend serving a bespoke animated front-end. It tracks job
 applications and stores the exact resume PDF used for each company, so when a
@@ -16,6 +16,7 @@ Run:  python server.py   →  open http://localhost:5000
 
 import csv
 import io
+import os
 import sqlite3
 import uuid
 from datetime import date, datetime
@@ -243,5 +244,5 @@ def export_csv():
 
 if __name__ == "__main__":
     init_storage()
-    # host=127.0.0.1 keeps it private to your machine.
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=False)

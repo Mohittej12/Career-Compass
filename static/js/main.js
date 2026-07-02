@@ -204,46 +204,69 @@ function celebrate() {
   confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 }, colors });
 }
 
+function bindIfPresent(selector, eventName, handler) {
+  const el = $(selector);
+  if (el) el.addEventListener(eventName, handler);
+}
+
 // ---------- Modal ----------
 const modal = $("#modal");
+const contactModal = $("#contact-modal");
 function openModal() {
-  $("#form-error").classList.add("hidden");
+  const formError = $("#form-error");
+  if (formError) formError.classList.add("hidden");
   // Default the date field to today.
   const today = new Date().toISOString().slice(0, 10);
-  modal.querySelector('input[name="date_applied"]').value = today;
-  modal.classList.remove("hidden");
+  if (modal) {
+    const dateField = modal.querySelector('input[name="date_applied"]');
+    if (dateField) dateField.value = today;
+    modal.classList.remove("hidden");
+  }
 }
-function closeModal() { modal.classList.add("hidden"); $("#add-form").reset(); }
+function closeModal() {
+  if (modal) modal.classList.add("hidden");
+  const addForm = $("#add-form");
+  if (addForm) addForm.reset();
+}
+function openContactModal() { if (contactModal) contactModal.classList.remove("hidden"); }
+function closeContactModal() { if (contactModal) contactModal.classList.add("hidden"); }
 
-["#add-btn", "#add-btn-hero", "#add-btn-empty"].forEach((sel) => {
-  const el = $(sel); if (el) el.addEventListener("click", openModal);
-});
-$("#modal-close").addEventListener("click", closeModal);
-$("#modal-cancel").addEventListener("click", closeModal);
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+["#add-btn", "#add-btn-hero", "#add-btn-empty"].forEach((sel) => bindIfPresent(sel, "click", openModal));
+bindIfPresent("#modal-close", "click", closeModal);
+bindIfPresent("#modal-cancel", "click", closeModal);
+if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+bindIfPresent("#contact-btn", "click", openContactModal);
+bindIfPresent("#footer-contact-link", "click", (e) => { e.preventDefault(); openContactModal(); });
+bindIfPresent("#contact-close", "click", closeContactModal);
+if (contactModal) contactModal.addEventListener("click", (e) => { if (e.target === contactModal) closeContactModal(); });
 
 // Submit the add form.
-$("#add-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const errEl = $("#form-error");
-  errEl.classList.add("hidden");
-  const formData = new FormData(e.target);
-  const res = await fetch("/api/applications", { method: "POST", body: formData });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    errEl.textContent = data.error || "Something went wrong. Please try again.";
-    errEl.classList.remove("hidden");
-    return;
-  }
-  closeModal();
-  await loadApplications();
-});
+const addForm = $("#add-form");
+if (addForm) {
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = $("#form-error");
+    if (errEl) errEl.classList.add("hidden");
+    const formData = new FormData(e.target);
+    const res = await fetch("/api/applications", { method: "POST", body: formData });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (errEl) {
+        errEl.textContent = data.error || "Something went wrong. Please try again.";
+        errEl.classList.remove("hidden");
+      }
+      return;
+    }
+    closeModal();
+    await loadApplications();
+  });
+}
 
 // ---------- Export ----------
-$("#export-btn").addEventListener("click", () => { window.location.href = "/api/export"; });
+bindIfPresent("#export-btn", "click", () => { window.location.href = "/api/export"; });
 
 // ---------- Search ----------
-$("#search").addEventListener("input", (e) => {
+bindIfPresent("#search", "input", (e) => {
   searchTerm = e.target.value.trim().toLowerCase();
   renderCards();
 });
