@@ -2,7 +2,7 @@
 
 Career Compass is a polished, animated job application tracker designed to help job seekers stay organized, professional, and ahead of every deadline. It lets you manage applications, attach the exact resume used for each opportunity, track follow-ups, and export your data when needed.
 
-![Career Compass dashboard preview](docs/screenshot.png)
+![Career Compass dashboard preview](docs/homepage.png)
 
 ## Features
 
