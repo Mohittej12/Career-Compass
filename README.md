@@ -1,62 +1,69 @@
-# 🎯 Job Application Tracker
+# Career Compass
 
-A premium, animated job-application tracker that stores **the exact resume PDF
-you used for each company** — so when a recruiter calls, you pull up the right
-version in one click.
+Career Compass is a polished, animated job application tracker designed to help job seekers stay organized, professional, and ahead of every deadline. It lets you manage applications, attach the exact resume used for each opportunity, track follow-ups, and export your data when needed.
 
-Built as a custom web app: a **Flask** backend (REST API + SQLite + on-disk
-resume storage) with a **bespoke animated front-end** (HTML / CSS / vanilla JS)
-— aurora background, glassmorphism cards, smooth motion, and confetti when you
-land an offer.
-
-![Job Application Tracker screenshot](docs/screenshot.png)
+![Career Compass dashboard preview](docs/screenshot.png)
 
 ## Features
 
-- Add applications with company, role, date, status, location, job link, notes.
-- **Attach the resume PDF you used** — stored as a real file, re-downloadable anytime.
-- Lifecycle stages: Applied → Online Assessment → Interview → Offer → Accepted / Rejected.
-- **Follow-up reminders** — overdue ones surface in an alert banner.
-- Live search, status filters, and animated stat counters.
-- 🎉 Confetti celebration when a status becomes Offer or Accepted.
-- Export everything to CSV.
+- Add and manage job applications with company, role, date, status, location, job link, and notes
+- Attach and download the exact resume PDF used for each application
+- Track application progress through Applied, Online Assessment, Interview, Offer, Accepted, and Rejected
+- Receive follow-up reminders for overdue tasks
+- Search and filter applications quickly
+- Export your full tracker data to CSV
+- Open a Contact Us section for development issues and improvement suggestions
 
 ## Tech stack
 
-- **Backend:** Flask, SQLite (Python standard library)
-- **Frontend:** HTML, CSS, vanilla JavaScript (no build step)
-- **Animation:** CSS keyframes + IntersectionObserver + canvas-confetti
+- Backend: Flask
+- Database: SQLite
+- Frontend: HTML, CSS, and vanilla JavaScript
+- Deployment: Render-ready with Gunicorn and render.yaml
 
-## Setup
+## Local setup
 
 ```bash
 pip install -r requirements.txt
 python server.py
 ```
 
-Then open **http://localhost:5000** in your browser.
+Then open http://localhost:5000 in your browser.
+
+## Render deployment
+
+This project is prepared for Render deployment using:
+
+- gunicorn for production serving
+- render.yaml for a simple web service configuration
+
+### Deploy steps
+
+1. Push this repository to GitHub.
+2. Create a new Web Service in Render.
+3. Connect the GitHub repository.
+4. Render will use the included render.yaml configuration.
+5. Deploy and open the generated Render URL.
 
 ## Project structure
 
-```
-application_tracker/
-├── server.py              # Flask app: routes + REST API + DB
-├── templates/index.html   # the single-page UI
-├── static/css/styles.css  # premium animated styling
-├── static/js/main.js       # front-end logic
+```text
+career-compass/
+├── server.py
+├── templates/
+├── static/
 ├── requirements.txt
-└── data/                  # created on first run (git-ignored)
-    ├── tracker.db         # your applications
-    └── resumes/           # the resume PDFs you attached
+├── render.yaml
+└── data/                 # created on first run
 ```
 
-## Credits
+## Contact
 
-Hero image: ["Open road leads to sunlit hills at sunrise"](https://unsplash.com/photos/open-road-leads-to-sunlit-hills-at-sunrise-JUDGhaboPE8)
-by Tim Mossholder on [Unsplash](https://unsplash.com/) (free to use under the Unsplash License).
+For development issues, feature requests, or improvements, contact:
 
-## Your data stays private
+- Gowrabathuni Mohit Tej
+- mohittejgowraa@gmail.com
 
-Everything runs on your machine and binds to `127.0.0.1` only — nothing is
-uploaded anywhere. The `data/` folder (database + resume PDFs) is **git-ignored**,
-so your applications and resumes are never committed to GitHub.
+## Privacy note
+
+Your data stays on the local machine by default. The data folder stores the SQLite database and uploaded resume files locally unless you later move to cloud storage for a public deployment.
